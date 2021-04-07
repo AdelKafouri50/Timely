@@ -12,5 +12,6 @@ urlpatterns = [
     path('dashboard/payables', views.PayablesView.as_view(), name='payables'),
     path('dashboard/receivables', views.ReceivablesView.as_view(), name='receivables'),
     path('dashboard/new_invoice', views.NewInvoiceFormView.as_view(), name='new_invoice'),
+    path('data-json/', views.ReceivableJsonView.as_view(), name='invoices-json-view')
     # path('dashboard/new_invoice', views.NewInvoiceView.as_view(), name='new_invoice'),
 ]

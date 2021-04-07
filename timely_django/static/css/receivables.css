@@ -1,0 +1,107 @@
+body {
+    background-color: rgb(207, 207, 207);
+
+}
+
+.invoice-page-container{
+    margin: 2em 4em;
+    display: flex;
+}
+
+body h4{
+    margin-left: 1em
+}
+
+.cardsContainer{
+    width: 40%;
+    background-color: rgb(207, 207, 207);
+    overflow:auto;
+    height: 80vh
+}
+
+
+.card-container{
+display: flex;
+flex-direction: column;
+margin: 1em;
+cursor: pointer;
+background-color: white;
+border-radius: 5px;
+border: solid 3px white;
+}
+
+.card-container:hover{
+    border: #343a40 solid 3px;
+    border-radius: 5px;
+}
+
+
+
+.top-part{
+height: 50px;
+display: flex;
+align-items: center;
+}
+
+.top-part-content{
+    margin: 0 0.5em 0 0.5em;
+}
+
+.bot-part{
+    display: flex;
+    justify-content: space-between;
+    margin: 0;
+}
+
+.bot-part-content{
+    margin: 0 1em 0 1em;
+}
+
+.bot-part-footer{
+    margin: 0 1em 1em 1em;
+}
+
+.invoice-container{
+    width: 60%;
+}
+
+.data{
+    display: none;
+}
+
+#data{
+    display: none;
+}
+
+.RHSContainer{
+    background-color: rgb(207, 207, 207);
+    width: 60%;
+    height: 80vh;
+}
+.RightHandSide{
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    margin: 1em;
+    width: 95%;
+    border-radius: 5px;
+    height: 95%;
+    
+}
+
+.RHSMain{
+    display: block;
+    margin: 0.5em 0.5em 1em 0.5em;
+}
+
+.RHSHeader{
+    margin-left: 1em;
+}
+
+.RHSContent{
+    height: 15%;
+}
+
+.RHSContent p{
+   margin-left: 1.2em;
+}

@@ -1,41 +1,87 @@
 {% extends 'base.html' %}
 {% block content %}
-
-<div class="container">
     <h4>Receivables</h4><br>
-    <table class="table table-sm">
-        <thead class="thead-dark">
-        <tr>
-            <th>Invoice ID</th>
-            <th>Name</th>
-            <th>Address</th>
-            <th>Terms</th>
-            <th>Billed on</th>
-            <th>date</th>
-            <th>Total</th>
-        </tr>
-        </thead>
-        <tbody>
+<div class="invoice-page-container">
+
         <!-- jinja2 Technique -->
         {% if receivables %}
+        <div class="cardsContainer">
         {% for i in receivables %}
-        <tr>
-            <td>{{i.invoice_id}}</td>
-            <td>{{i.business_name}}</td>
-            <td>{{i.address}}</td>
-            <td>{{i.terms}}</td>
-            <td>{{i.date_sent}}</td>
-            <td>{{i.date_due}}</td>
-            <td>{{i.total_price}}</td>
-        </tr>
+            <div class="card-container">
+                <div class="top-part">
+                    <h2 class="top-part-content">{{i.business_name}}</h2>
+                </div>
+                <div class="bot-part">
+                    <span class="bot-part-content"> Due: {{i.date_due}} </span>
+                    <span class="bot-part-content"> {{i.total_price}} </span>
+                </div>
+                <div class="bot-part-footer">
+                    <span> #{{i.invoice_id}}</span>
+                </div>
+            </div>
+            <div class='data'>
+                {{i.invoice_id}}
+                {{i.business_name}}
+                {{i.address}}
+                {{i.terms}}
+                {{i.date_sent}}
+                {{i.date_due}}
+                {{i.total_price}}
+            </div>
+
         {% endfor %}
+        </div>
+        <div class='RHSContainer'>
+            <div class='RightHandSide'>
+                <h2 class='RHSMain'>Invoice Details</h2>
+                <div class='RHSContent'>
+                    <h5 class='RHSHeader'>Business Name:</h5>
+                    <p id='BusinessName'> asdasdsad </p>
+                </div>
+                <div class='RHSContent'>
+                    <h5 class='RHSHeader'>Invoice #:</h5>
+                    <p id='InvoiceNumber'> asdasdsad </p>
+                </div>
+                <div class='RHSContent'>
+                    <h5 class='RHSHeader'>Date Sent:</h5>
+                    <p id='DateSent'> asdasdsad </p>
+                </div>
+                <div class='RHSContent'>
+                    <h5 class='RHSHeader'>Due Date:</h5>
+                    <p id='DueDate'> asdasdsad </p>
+                </div>
+                <div class='RHSContent'>
+                    <h5 class='RHSHeader'>Total Amount:</h5>
+                    <p id='TotalAmount'> asdasdsad </p>
+                </div>
+            </div>
+        </div>
+
         {% else %}
         <tr>
             <td>No invoices</td>
         </tr>
         {% endif %}
-        </tbody>
-    </table>
+
+
 </div>
+
+<script>
+
+    {% comment %} const datalist = document.getElementById('data')
+    dataJSON = datalist.innerHTML
+    console.log(typeof dataJSON);
+    let array = JSON.parse(dataJSON)
+    console.log(array) {% endcomment %}
+
+    const data = '{{receivables }}'
+    console.log(data)
+    const parser = new DOMParser()
+    const parsedData = parser.parseFromString(data, 'text/html').documentElement.textContent
+    const arr = parsedData.split({ })
+    const arr2 = []
+
+    //console.log(arr2)
+</script>
 
 {% endblock %}
