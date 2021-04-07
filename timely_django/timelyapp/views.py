@@ -138,17 +138,6 @@ class ReceivablesView(ListView):
         context['receivables'] = get_invoices(business_id, 'receivables')
         return context
 
-class ReceivableJsonView(View):
-    def get(self, *args, **kwargs):
-        queryset = list(Business.objects.all())
-
-    def get_context_data(self, **kwargs):
-        def get(self, *args, **kwargs):
-            queryset = list(Business.objects.all())
-            context = super(ReceivablesView, self).get_context_data(**kwargs)
-            business_id = Business.objects.filter(owner__id=self.request.user.id).values()[0]['id']
-            context['receivables'] = get_invoices(business_id, 'receivables')
-            return JsonResponse({'data': context})
 
 class PayablesView(ListView):
     template_name = 'invoices/payables.html'
