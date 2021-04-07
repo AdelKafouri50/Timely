@@ -185,3 +185,25 @@ class NewInvoiceFormView(CreateView):
 
     def get_success_url(self):
         return reverse_lazy('dashboard')
+
+
+class ReceivablesJSONView(ListView):
+    template_name = 'invoices/receivables.html'
+    success_url = reverse_lazy('home')
+    queryset = Business.objects.all()
+
+    def get(self, *args, **kwargs):
+        business_id = Business.objects.filter(owner__id=self.request.user.id).values()[0]['id']
+        data = get_invoices(business_id, 'receivables')
+        return JsonResponse(data, safe=False)
+
+
+class PayablesJSONView(ListView):
+    template_name = 'invoices/payables.html'
+    success_url = reverse_lazy('home')
+    queryset = Business.objects.all()
+
+    def get(self, *args, **kwargs):
+        business_id = Business.objects.filter(owner__id=self.request.user.id).values()[0]['id']
+        data = get_invoices(business_id, 'payables')
+        return JsonResponse(data, safe=False)

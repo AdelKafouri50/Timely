@@ -1,41 +1,90 @@
 {% extends 'base.html' %}
 {% block content %}
-
-<div class="container">
     <h4>Payables</h4><br>
-    <table class="table table-sm">
-        <thead class="thead-dark">
-        <tr>
-            <th>Invoice ID</th>
-            <th>Name</th>
-            <th>Address</th>
-            <th>Terms</th>
-            <th>Billed on</th>
-            <th>date</th>
-            <th>Total</th>
-        </tr>
-        </thead>
-        <tbody>
-        <!-- jinja2 Technique -->
-        {% if payables %}
-        {% for i in payables %}
-        <tr>
-            <td>{{i.invoice_id}}</td>
-            <td>{{i.business_name}}</td>
-            <td>{{i.address}}</td>
-            <td>{{i.terms}}</td>
-            <td>{{i.date_sent}}</td>
-            <td>{{i.date_due}}</td>
-            <td>{{i.total_price}}</td>
-        </tr>
-        {% endfor %}
+<div class="invoice-page-container">
+     {% if payables %}
+
+    <div class="cardsContainer">
+        </div>
+
+        <div class='RHSContainer'>
+            <div class='RightHandSide'>
+                <h2 class='RHSMain'>Invoice Details</h2>
+                <div class='RHSContent'>
+                    <h5 class='RHSHeader'>Business Name:</h5>
+                    <p id='BusinessName'>  </p>
+                </div>
+                <div class='RHSContent'>
+                    <h5 class='RHSHeader'>Invoice #:</h5>
+                    <p id='InvoiceNumber'>  </p>
+                </div>
+                <div class='RHSContent'>
+                    <h5 class='RHSHeader'>Date Sent:</h5>
+                    <p id='DateSent'>  </p>
+                </div>
+                <div class='RHSContent'>
+                    <h5 class='RHSHeader'>Due Date:</h5>
+                    <p id='DueDate'>  </p>
+                </div>
+                <div class='RHSContent'>
+                    <h5 class='RHSHeader'>Total Amount:</h5>
+                    <p id='TotalAmount'>  </p>
+                </div>
+            </div>
+        </div>
+
         {% else %}
         <tr>
             <td>No invoices</td>
         </tr>
         {% endif %}
-        </tbody>
-    </table>
 </div>
+
+<script>
+ 
+    async function loadData(){
+        const BusinessName = document.getElementById('BusinessName')
+        const InvoiceNumber = document.getElementById('InvoiceNumber')
+        const DateSent = document.getElementById('DateSent')
+        const DueDate = document.getElementById('DueDate')
+        const TotalAmount = document.getElementById('TotalAmount')
+        
+        const cardscontainer = document.querySelector('.cardsContainer')
+        const data = await fetch('http://localhost:8000/accounts/payables-json/')
+        const jsonData = await data.json()
+        console.log(jsonData)
+        jsonData.forEach(item => {
+            cardscontainer.innerHTML +=
+            `<div id="${item.index}" class="card-container">
+                <div class="top-part">
+                    <h2 class="top-part-content">${item.business_name}</h2>
+                </div>
+                <div class="bot-part">
+                    <span class="bot-part-content"> Due: ${item.date_due} </span>
+                    <span class="bot-part-content"> ${item.total_price} </span>
+                </div>
+                <div class="bot-part-footer">
+                    <span> #${item.index}</span>
+                </div>
+            </div>`
+        })
+
+        const element = document.querySelectorAll('.card-container')
+        element.forEach(card =>{
+            card.addEventListener('click', ()=>{
+                console.log(card.id)
+                const filtered = jsonData.find(item => item.index == card.id)
+                console.log(filtered)
+                BusinessName.innerHTML = filtered.business_name
+                InvoiceNumber.innerHTML = filtered.index
+                DateSent.innerHTML = filtered.date_sent
+                DueDate.innerHTML = filtered.date_due
+                TotalAmount.innerHTML = filtered.total_price
+            })
+        })
+
+    }
+    loadData()
+</script>
 
 {% endblock %}

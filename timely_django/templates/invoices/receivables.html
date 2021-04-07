@@ -6,53 +6,30 @@
         <!-- jinja2 Technique -->
         {% if receivables %}
         <div class="cardsContainer">
-        {% for i in receivables %}
-            <div class="card-container">
-                <div class="top-part">
-                    <h2 class="top-part-content">{{i.business_name}}</h2>
-                </div>
-                <div class="bot-part">
-                    <span class="bot-part-content"> Due: {{i.date_due}} </span>
-                    <span class="bot-part-content"> {{i.total_price}} </span>
-                </div>
-                <div class="bot-part-footer">
-                    <span> #{{i.invoice_id}}</span>
-                </div>
-            </div>
-            <div class='data'>
-                {{i.invoice_id}}
-                {{i.business_name}}
-                {{i.address}}
-                {{i.terms}}
-                {{i.date_sent}}
-                {{i.date_due}}
-                {{i.total_price}}
-            </div>
-
-        {% endfor %}
         </div>
+
         <div class='RHSContainer'>
             <div class='RightHandSide'>
                 <h2 class='RHSMain'>Invoice Details</h2>
                 <div class='RHSContent'>
                     <h5 class='RHSHeader'>Business Name:</h5>
-                    <p id='BusinessName'> asdasdsad </p>
+                    <p id='BusinessName'>  </p>
                 </div>
                 <div class='RHSContent'>
                     <h5 class='RHSHeader'>Invoice #:</h5>
-                    <p id='InvoiceNumber'> asdasdsad </p>
+                    <p id='InvoiceNumber'>  </p>
                 </div>
                 <div class='RHSContent'>
                     <h5 class='RHSHeader'>Date Sent:</h5>
-                    <p id='DateSent'> asdasdsad </p>
+                    <p id='DateSent'>  </p>
                 </div>
                 <div class='RHSContent'>
                     <h5 class='RHSHeader'>Due Date:</h5>
-                    <p id='DueDate'> asdasdsad </p>
+                    <p id='DueDate'>  </p>
                 </div>
                 <div class='RHSContent'>
                     <h5 class='RHSHeader'>Total Amount:</h5>
-                    <p id='TotalAmount'> asdasdsad </p>
+                    <p id='TotalAmount'>  </p>
                 </div>
             </div>
         </div>
@@ -67,21 +44,50 @@
 </div>
 
 <script>
+ 
+    async function loadData(){
+        const BusinessName = document.getElementById('BusinessName')
+        const InvoiceNumber = document.getElementById('InvoiceNumber')
+        const DateSent = document.getElementById('DateSent')
+        const DueDate = document.getElementById('DueDate')
+        const TotalAmount = document.getElementById('TotalAmount')
+        
+        const cardscontainer = document.querySelector('.cardsContainer')
+        const data = await fetch('http://localhost:8000/accounts/receivables-json/')
+        const jsonData = await data.json()
+        console.log(jsonData)
+        jsonData.forEach(item => {
+            cardscontainer.innerHTML +=
+            `<div id="${item.index}" class="card-container">
+                <div class="top-part">
+                    <h2 class="top-part-content">${item.business_name}</h2>
+                </div>
+                <div class="bot-part">
+                    <span class="bot-part-content"> Due: ${item.date_due} </span>
+                    <span class="bot-part-content"> ${item.total_price} </span>
+                </div>
+                <div class="bot-part-footer">
+                    <span> #${item.index}</span>
+                </div>
+            </div>`
+        })
 
-    {% comment %} const datalist = document.getElementById('data')
-    dataJSON = datalist.innerHTML
-    console.log(typeof dataJSON);
-    let array = JSON.parse(dataJSON)
-    console.log(array) {% endcomment %}
+        const element = document.querySelectorAll('.card-container')
+        element.forEach(card =>{
+            card.addEventListener('click', ()=>{
+                console.log(card.id)
+                const filtered = jsonData.find(item => item.index == card.id)
+                console.log(filtered)
+                BusinessName.innerHTML = filtered.business_name
+                InvoiceNumber.innerHTML = filtered.index
+                DateSent.innerHTML = filtered.date_sent
+                DueDate.innerHTML = filtered.date_due
+                TotalAmount.innerHTML = filtered.total_price
+            })
+        })
 
-    const data = '{{receivables }}'
-    console.log(data)
-    const parser = new DOMParser()
-    const parsedData = parser.parseFromString(data, 'text/html').documentElement.textContent
-    const arr = parsedData.split({ })
-    const arr2 = []
-
-    //console.log(arr2)
+    }
+    loadData()
 </script>
 
 {% endblock %}
