@@ -2,34 +2,100 @@
 {% block content %}
     <h4>Receivables</h4><br>
 <div class="invoice-page-container">
+     {% if receivables %}
 
-        <!-- jinja2 Technique -->
-        {% if receivables %}
-        <div class="cardsContainer">
+    <div class="cardsContainer">
         </div>
 
         <div class='RHSContainer'>
-            <div class='RightHandSide'>
-                <h2 class='RHSMain'>Invoice Details</h2>
-                <div class='RHSContent'>
-                    <h5 class='RHSHeader'>Business Name:</h5>
-                    <p id='BusinessName'>  </p>
+            <div class="RightHandSide">
+                <div class="TopPart">
+                    <div class="TopPartLHS">
+                        <div class="logo" id='logo'>
+                            
+                        </div>
+                        <div class="InvoiceHeaders">
+                            <div class="BusinessName" id='BusinessName'>
+
+                            </div>
+                            <div class="InvoiceNumber" id='InvoiceNumber'>
+
+                             </div>
+                        </div>
+                    </div>
+                    <div class="TopPartRHS">
+                        <div class="DateDue" id='DateDue'>
+                            Due Date: 
+                        </div>
+                        <div class="ButtonContainer">
+                            <div class="Button">Flag</div>
+                            <div class="Button">Schedule</div>
+                            <div class="Button">Mark as Paid</div>
+                        </div>
+                    </div>
                 </div>
-                <div class='RHSContent'>
-                    <h5 class='RHSHeader'>Invoice #:</h5>
-                    <p id='InvoiceNumber'>  </p>
+                
+                <div class="MiddlePart" id='MiddlePart'>
+                    <div class="RHSHeaders">
+                        <div class="ItemDescriptionHeader">
+                            DESCRIPTION
+                        </div>
+                        <div class="QuantityPriceAmountContainer">
+                            <div class="QuantityHeader">
+                                QUANTITY
+                            </div>
+                            <div class="ItemPriceHeader">
+                                PRICE
+                            </div>
+                            <div class="ItemsTotalPriceHeader">
+                                AMOUNT
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ItemDetailsContainer" id='ItemDetailsContainer'>
+
+                    </div>
+                    
+
+                    <div class="BottomPartContainer">
+                        <div class="TotalPriceSection">
+                            <div class="TotalAmountWord">
+                                Total Due (Incl. Tax):
+                            </div>
+                            <div class="TotalAmountNumber" id='TotalAmountNumber'>
+
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class='RHSContent'>
-                    <h5 class='RHSHeader'>Date Sent:</h5>
-                    <p id='DateSent'>  </p>
-                </div>
-                <div class='RHSContent'>
-                    <h5 class='RHSHeader'>Due Date:</h5>
-                    <p id='DueDate'>  </p>
-                </div>
-                <div class='RHSContent'>
-                    <h5 class='RHSHeader'>Total Amount:</h5>
-                    <p id='TotalAmount'>  </p>
+                <div class="BottomPart">
+                    <div class="From">
+                        <div class="FromLabel">
+                            FROM:
+                        </div>
+                        <div class="FromName" id='FromName'>
+
+                        </div>
+                    </div>
+                    <div class="To">
+                        <div class="ToLabel">
+                            TO:
+                        </div>
+                        <div class="ToName" id='ToName'>
+
+                        </div>
+                    </div>
+                    <div class="NoteContainer">
+                        <div class="PaymentMedium">
+                            PAYMENT MEDIUM: Credit Card Accepted.
+                        </div>
+                        <div class="Note">
+                            Note:
+                        </div>
+                        <div class="NoteContent">
+                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Laudantium saepe distinctio facere optio magni a. Pariatur earum ad voluptatibus incidunt excepturi.
+                        </div>                       
+                    </div>
                 </div>
             </div>
         </div>
@@ -39,26 +105,56 @@
             <td>No invoices</td>
         </tr>
         {% endif %}
-
-
 </div>
 
 <script>
+    const InjectInvoice = (list) => {
+        list.items.forEach(item => ItemDetailsContainer.innerHTML+=`
+                    <div class="ItemDetails">
+                        <div class="ItemDetailsLHS">
+                            <div class="ItemName">
+                                ${item.name}
+                            </div>
+                            <div class="ItemDescription">
+                                ${item.description}
+                            </div>
+                        </div>
+                        <div class="QuantityPriceAmountContainerNumbers">
+                                <div class="Quantity">
+                                    $${parseInt(item.quantity_purchased)}
+                                </div>
+                                <div class="ItemPrice">
+                                    $${parseInt(item.item_total_price)}
+                                </div>
+                                <div class="ItemsTotalPrice">
+                                    $${parseInt(item.quantity_purchased*item.item_total_price)}
+                                </div>
+                            </div>  
+                        </div>
+                    </div>`)
+    }
  
     async function loadData(){
+        const ItemDetailsContainer = document.getElementById('ItemDetailsContainer')
         const BusinessName = document.getElementById('BusinessName')
         const InvoiceNumber = document.getElementById('InvoiceNumber')
-        const DateSent = document.getElementById('DateSent')
-        const DueDate = document.getElementById('DueDate')
+        //const DateSent = document.getElementById('DateSent')
+        const DueDate = document.getElementById('DateDue')
         const TotalAmount = document.getElementById('TotalAmount')
-        
+        const orders = document.getElementById('Orders')
+        const Initials = document.getElementById('logo')
+        const TotalAmountNumber = document.getElementById('TotalAmountNumber')
+        const FromName = document.getElementById('FromName')
+        const ToName = document.getElementById('ToName')
         const cardscontainer = document.querySelector('.cardsContainer')
-        const data = await fetch('http://localhost:8000/accounts/receivables-json/')
+        const data = await fetch('http://localhost:8000/rest-api/receivables/')
         const jsonData = await data.json()
+        var loaded = false
         console.log(jsonData)
+        //console.log(jsonData)
         jsonData.forEach(item => {
             cardscontainer.innerHTML +=
-            `<div id="${item.index}" class="card-container">
+            `<div id="${item.invoice_id}" class="card-container">
                 <div class="top-part">
                     <h2 class="top-part-content">${item.business_name}</h2>
                 </div>
@@ -67,7 +163,7 @@
                     <span class="bot-part-content"> ${item.total_price} </span>
                 </div>
                 <div class="bot-part-footer">
-                    <span> #${item.index}</span>
+                    <span> #${item.invoice_id}</span>
                 </div>
             </div>`
         })
@@ -76,13 +172,23 @@
         element.forEach(card =>{
             card.addEventListener('click', ()=>{
                 console.log(card.id)
-                const filtered = jsonData.find(item => item.index == card.id)
-                console.log(filtered)
+                const filtered = jsonData.find(item => item.invoice_id == card.id)
+                console.log(filtered.items)
+                if (ItemDetailsContainer.innerHTML == 0) {
+                    InjectInvoice(filtered)
+                }
+                else {
+                    ItemDetailsContainer.innerHTML = ''
+                    InjectInvoice(filtered)
+                } 
+                const logo = filtered.business_name.split(' ').shift().charAt(0) + filtered.business_name.split(' ').pop().charAt(0).toUpperCase();
+                Initials.innerHTML = logo
                 BusinessName.innerHTML = filtered.business_name
-                InvoiceNumber.innerHTML = filtered.index
-                DateSent.innerHTML = filtered.date_sent
-                DueDate.innerHTML = filtered.date_due
-                TotalAmount.innerHTML = filtered.total_price
+                InvoiceNumber.innerHTML = `Invoice #${filtered.invoice_id}`
+                DueDate.innerHTML = `Due Date: ${filtered.date_due}`
+                TotalAmountNumber.innerHTML= `$${filtered.total_price}`
+                FromName.innerHTML= `${filtered.bill_from}`
+                ToName.innerHTML= `${filtered.bill_to}`
             })
         })
 

@@ -1,28 +1,31 @@
 from django.shortcuts import render, redirect
 from django.core.mail import send_mail, BadHeaderError
 from django.http import HttpResponse
-# from django.contrib.auth.forms import PasswordResetForm, UserCreationForm
 from django.contrib.auth.tokens import default_token_generator
-from django.template.loader import render_to_string
 from django.db.models.query_utils import Q
 from django.db import transaction
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-from django.contrib import messages #import messages
-from django.contrib.messages.views import SuccessMessageMixin
 from django.views import generic
 from django.views.generic.edit import CreateView
 from django.views.generic import ListView
 from django.urls import reverse_lazy
 from django.http import JsonResponse
-from django.views.generic import View
+
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from rest_framework import viewsets, serializers
+
+from .serializers import *
 from .models import *
 from .forms import *
 
 import pandas as pd
 import json
 import datetime
-
+import numpy as np
 
 
 #Generic functions
@@ -40,49 +43,67 @@ def get_duedate(term):
 
     return term_choices[term].strftime("%Y-%m-%d")
 
+def type_converter(obj):
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, datetime.datetime):
+        return obj.__str__()
+
 def get_invoices(biz_id, type):
 
     if type == "receivables":
-        invoices = Invoice.objects.filter(bill_to__id=biz_id).values()
-        dir = "bill_to_id"
-    elif type == "payables":
         invoices = Invoice.objects.filter(bill_from__id=biz_id).values()
-        dir = "bill_from_id"
+        opposite = "bill_to_id"
+
+    elif type == "payables":
+        invoices = Invoice.objects.filter(bill_to__id=biz_id).values()
+        opposite = "bill_from_id"
     else:
         return None
 
     if invoices.exists():
-        billed_business = Business.objects.filter(pk=invoices[0][dir]).values()
-        # order = Order.objects.filter(invoice=invoices[0]['id']).values()
+        #Gets the other business's data
+        other_business = Business.objects.filter(pk=invoices[0][opposite]).values()
+        order = Order.objects.filter(invoice__in=invoices.values_list('id', flat=True)).values()
 
+        #Convert to data frame to merge
         invoices = pd.DataFrame(invoices).rename(columns={'id': 'invoice_id'})
-        billed_business = pd.DataFrame(billed_business).rename(columns={'id': 'business_id'})
+        other_business = pd.DataFrame(other_business).rename(columns={'id': 'business_id'})
+        order = pd.DataFrame(order)
 
-        df = invoices.merge(billed_business,
-                            left_on=dir,
+        invoices_merged = invoices.merge(other_business,
+                            left_on=opposite,
                             right_on='business_id')
 
-        df.total_price.fillna(0, inplace=True)
-        df.total_price = '$' + df.total_price.astype('float').round(2).astype(str)
-        # df.total_price = '$' + df.total_price.astype('float').round(2).to_string(index=False)
+        #Some formatting fixes
+        invoices_merged.total_price.fillna(0, inplace=True)
+        invoices_merged.total_price = '$' + invoices_merged.total_price.astype('float').round(2).astype(str)
+        invoices_merged.date_sent = [x.strftime("%B %d, %Y").lstrip("0") for x in invoices_merged.date_sent]
+        invoices_merged.date_due = ['COD' if x is None else x.strftime("%B %d, %Y").lstrip("0") for x in invoices_merged.date_due]
 
-        df.date_sent = [x.strftime("%B %d, %Y").lstrip("0") for x in df.date_sent]
-        df.date_due = ['COD' if x is None else x.strftime("%B %d, %Y").lstrip("0") for x in df.date_due]
+        invoices_merged = invoices_merged.sort_values('date_due', ascending=False).reset_index(drop=True)
+        # invoices_merged.set_index('invoice_id', inplace=True)
 
-        df = df.sort_values('date_due', ascending=False).reset_index(drop=True)
-        df.index += 1
+        #Convert to JSON
+        data_dict_list = []
+        for i in range(len(invoices_merged)):
+            invoice_id = invoices_merged.iloc[i].invoice_id
+            invoice_dict = invoices_merged.iloc[i]
+            order_dict = order[order.invoice_id == invoice_id].to_dict(orient='records')
+            data_dict_list.append({**invoice_dict, **{"order_list": order_dict}})
 
-        # parsing the DataFrame in json format.
-        json_records = df.reset_index().to_json(orient='records')
-        data = list(json.loads(json_records))
+        #This parses it to make sure any weird data types are smoothed out
+        data_json = json.dumps(data_dict_list, indent=4, default=type_converter)
+        data = list(json.loads(data_json))
 
         return data
 
 
 # Create your views here.
-def index(request):
-    return render(request, "home.html")
-
 def password_reset_request(request):
     if request.method == "POST":
         password_reset_form = CustomPasswordResetForm(request.POST)
@@ -116,6 +137,7 @@ def password_reset_request(request):
                   template_name="registration/password_reset_form.html",
                   context={"password_reset_form": password_reset_form})
 
+# Templates view
 class SignUpView(generic.CreateView):
     form_class = CustomUserCreationForm
     success_url = reverse_lazy('login')
@@ -127,29 +149,64 @@ class DashboardView(ListView):
     queryset = Business.objects.all()
 
 
-class ReceivablesView(ListView):
-    template_name = 'invoices/receivables.html'
+# Django REST framework endpoints
+class InvoiceViewSet(viewsets.ModelViewSet):
+    serializer_class = InvoiceSerializer
+    queryset = Invoice.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = self.queryset
+        business_id = Business.objects.get(owner__id=self.request.user.id).id
+        query_set = queryset.filter(Q(bill_from__id=business_id) | Q(bill_to__id=business_id)).order_by('id')
+        return query_set
+
+
+class PayablesViewSet(viewsets.ModelViewSet):
+    serializer_class = PayablesSerializer
+    queryset = Invoice.objects.all()
     success_url = reverse_lazy('home')
-    queryset = Business.objects.all()
+    permission_classes = [IsAuthenticated]
 
-    def get_context_data(self, **kwargs):
-        context = super(ReceivablesView, self).get_context_data(**kwargs)
-        business_id = Business.objects.filter(owner__id=self.request.user.id).values()[0]['id']
-        context['receivables'] = get_invoices(business_id, 'receivables')
-        return context
+    # def put(self, request, *args, **kwargs):
+    #     return self.update(request, *args, **kwargs)
 
 
-class PayablesView(ListView):
-    template_name = 'invoices/payables.html'
+    # Overrides the internal function
+    def get_queryset(self):
+        queryset = self.queryset
+        business_id = Business.objects.get(owner__id=self.request.user.id).id
+        query_set = queryset.filter(bill_to__id=business_id)
+        return query_set
+
+
+class ReceivablesViewSet(viewsets.ModelViewSet):
+    serializer_class = ReceivablesSerializer
+    queryset = Invoice.objects.all()
     success_url = reverse_lazy('home')
-    queryset = Business.objects.all()
+    permission_classes = [IsAuthenticated]
 
-    def get_context_data(self, **kwargs):
-        context = super(PayablesView, self).get_context_data(**kwargs)
-        business_id = Business.objects.filter(owner__id=self.request.user.id).values()[0]['id']
-        context['payables'] = get_invoices(business_id, 'payables')
-        return context
+    # Overrides the internal function
+    def get_queryset(self):
+        queryset = self.queryset
+        business_id = Business.objects.get(owner__id=self.request.user.id).id
+        query_set = queryset.filter(bill_from__id=business_id)
+        return query_set
 
+# New Nested Invoice Form
+class NewBusinessFormView(CreateView):
+    model = Business
+    template_name = 'registration/new_business.html'
+    form_class = CreateBusinessForm
+    success_url = reverse_lazy('home')
+
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
+
+
+
+# New Nested Invoice Form
 class NewInvoiceFormView(CreateView):
     model = Invoice
     template_name = 'invoices/new_invoice.html'
@@ -187,6 +244,33 @@ class NewInvoiceFormView(CreateView):
         return reverse_lazy('dashboard')
 
 
+
+# # old inbox views (can delete later)
+class ReceivablesView(ListView):
+    template_name = 'invoices/receivables.html'
+    success_url = reverse_lazy('home')
+    queryset = Business.objects.all()
+
+    def get_context_data(self, **kwargs):
+        context = super(ReceivablesView, self).get_context_data(**kwargs)
+        business_id = Business.objects.filter(owner__id=self.request.user.id).values()[0]['id']
+        context['receivables'] = get_invoices(business_id, 'receivables')
+        return context
+
+
+class PayablesView(ListView):
+    template_name = 'invoices/payables.html'
+    success_url = reverse_lazy('home')
+    queryset = Business.objects.all()
+
+    def get_context_data(self, **kwargs):
+        context = super(PayablesView, self).get_context_data(**kwargs)
+        business_id = Business.objects.filter(owner__id=self.request.user.id).values()[0]['id']
+        context['payables'] = get_invoices(business_id, 'payables')
+        return context
+
+
+# Manual JSON serializer (can delete later)
 class ReceivablesJSONView(ListView):
     template_name = 'invoices/receivables.html'
     success_url = reverse_lazy('home')
@@ -196,7 +280,6 @@ class ReceivablesJSONView(ListView):
         business_id = Business.objects.filter(owner__id=self.request.user.id).values()[0]['id']
         data = get_invoices(business_id, 'receivables')
         return JsonResponse(data, safe=False)
-
 
 class PayablesJSONView(ListView):
     template_name = 'invoices/payables.html'

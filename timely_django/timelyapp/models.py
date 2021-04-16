@@ -3,8 +3,10 @@ from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from address.models import AddressField
 
 from .managers import CustomUserManager
+from datetime import date
 
 TERM_CHOICES = [
     ('COD', 'Cash on delivery'),
@@ -35,10 +37,17 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 class Business(models.Model):
     is_member = models.BooleanField(default=False)
     owner = models.ForeignKey(CustomUser, default=None, null=True, on_delete=models.CASCADE)
-    managers = models.ManyToManyField(CustomUser, related_name='managers')
+    managers = models.ManyToManyField(CustomUser, null=True, default=None, related_name='managers')
     business_name = models.CharField(default=None, max_length=64)
     address = models.CharField(default=None, max_length=64)
-    date_joined = models.DateTimeField(default=timezone.now)
+    # address = AddressField(null=True, on_delete=models.SET_NULL)
+    date_joined = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        ''' On save, update timestamps '''
+        if not self.id:
+            self.date_joined = timezone.now()
+        return super(Business, self).save(*args, **kwargs)
 
     def __str__(self):
         return "%s" %(self.business_name)
@@ -55,11 +64,12 @@ class Discount(models.Model):
 class Inventory(models.Model):
     business = models.ForeignKey(Business, default=None, null=True, on_delete=models.CASCADE)
     last_updated = models.DateField(null=True)
-    description = models.CharField(default=None, null=True, max_length=100)
+    name = models.CharField(default=None, null=True, max_length=100)
+    description = models.CharField(default=None, null=True, max_length=500)
     quantity_in_stock = models.DecimalField(default=None, max_digits=10, decimal_places=6)
     unit = models.CharField(default='pc', null=True, max_length=3)
     unit_price = models.DecimalField(default=None, null=True, max_digits=10, decimal_places=2)
-    currency = models.CharField(default='dollar', null=True, max_length=3)
+    currency = models.CharField(default='USD', null=True, max_length=3)
 
     def __str__(self):
         return "%s: $%s/%s, Available: %s" %(self.description,
@@ -68,6 +78,7 @@ class Inventory(models.Model):
                                              self.quantity_in_stock)
 
 class Invoice(models.Model):
+    invoice_name = models.CharField(default=None, null=True, max_length=16)
     date_sent = models.DateField(null=True)
     date_due = models.DateField(null=True)
     bill_from = models.ForeignKey(Business, on_delete=models.CASCADE, related_name='bill_from')
@@ -82,13 +93,19 @@ class Invoice(models.Model):
     def save(self, *args, **kwargs):
         if self.pk is None:
             super().save(*args, **kwargs)
-        else:
-            prices = Order.objects.filter(invoice=self.pk).values_list('item_total_price', flat=True)
-            self.total_price = sum(prices)
+
+        if self.total_price or self.invoice_name is None:
+            name = Business.objects.get(pk=self.bill_from.id).business_name
+            name = ''.join([x[0] for x in name.split(" ")]).upper()
+            name += str(date.today().year)[-2:]
+            name += str(self.pk).zfill(6)
+
+            self.invoice_name = name
+            self.total_price = sum(Order.objects.filter(invoice=self.pk).values_list('item_total_price', flat=True))
             super().save(*args, **kwargs)
 
 class Order(models.Model):
-    invoice = models.ForeignKey(Invoice, null=True, on_delete=models.CASCADE, related_name='has_items')
+    invoice = models.ForeignKey(Invoice, null=True, on_delete=models.CASCADE, related_name='items')
     discount_code = models.ForeignKey(Discount, default=1, on_delete=models.CASCADE)
     item = models.ForeignKey(Inventory, on_delete=models.CASCADE)
     quantity_purchased = models.DecimalField(max_digits=10, decimal_places=6)

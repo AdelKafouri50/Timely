@@ -67,6 +67,7 @@ align-items: center;
 
 
 .RHSContainer{
+    border-radius: 2em;
     background-color: rgb(207, 207, 207);
     width: 60%;
     height: 80vh;
@@ -75,26 +76,230 @@ align-items: center;
     display: flex;
     flex-direction: column;
     background-color: white;
-    margin: 1em;
-    width: 95%;
-    border-radius: 5px;
-    height: 95%;
+    width: 100%;
+    border-radius: 2em;
+    height: 100%;
     
 }
 
-.RHSMain{
-    display: block;
-    margin: 0.5em 0.5em 1em 0.5em;
+.TopPart{
+    display: flex;
+    border-radius: 0.5em 0.5em 0 0;
+    color: white;
+    background-color: #343a40;
+    height: 20%;
+
 }
 
-.RHSHeader{
+.TopPartLHS{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 1em;
+    line-height: 1em;
+}
+
+.InvoiceHeaders{
+    display: flex;
+    flex-direction: column;
+}
+
+.logo{
+    font-size: 1.25em;
+    padding: 0.5em;
+    font-weight: bold;
+    color: #343a40;
+    background-color: white;
+    border-radius: 50%;
+    border: 1px solid rgb(228, 228, 228);
+    margin-right: 0.5em;
+}
+
+.InvoiceNumber{
+    font-size: 0.75em;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+
+.TopPartRHS{
+    justify-content: center;
+    margin-right: 1.5em;
+    font-size: 0.9em;
+    display: flex;
+    flex-direction: column;
+    margin-left: auto;
+    text-align: left;
+    font-weight: bold;
+}
+
+.ButtonContainer{
+    display: flex;
+}
+
+.Button{
+    padding: 0.33em 1.2em;
+    color: white;
+    background-color: #0275d8;
+    border-radius: 3px;
+    margin-right: 0.5em;
+    margin-top: 0.5em;
+    cursor: pointer;
+}
+
+.Button:hover{
+    color: #343a40;
+    background-color: #ffffff;
+}
+
+
+.MiddlePart{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 60%;
+    overflow: auto;
+}
+
+.ItemDetailsContainer{
+    display: flex;
+    flex-direction: column;
+    width: 90%;
+
+}
+
+.RHSHeaders{
+    color: #575d63;
+    width: 90%;
+    margin-top: 2em;
+    font-size: 0.75em;
+    font-weight: bold;
+    display: flex;
+}
+
+.ItemDescriptionHeader{
     margin-left: 1em;
 }
 
-.RHSContent{
-    height: 15%;
+.QuantityPriceAmountContainer{
+    margin-left: auto;
+    display: flex;
+    width: 25%;
+    justify-content: space-between;
 }
 
-.RHSContent p{
-   margin-left: 1.2em;
+.ItemDetails{
+    display: flex;
+    padding: 0.75em 0;
+    border-top: 0.5px solid #343a403d;
+    margin-top: 0.5em;
+    font-size: 0.75em;
+    font-weight: bold;
 }
+
+.ItemDetailsLHS{
+    display: flex;
+    flex-direction: column;
+    margin-left: 1em;
+}
+
+.ItemDetailsLHS .ItemName{
+    font-size: 1.8em;
+    display: block;
+}
+
+.QuantityPriceAmountContainerNumbers{
+    margin-left: auto;
+    display: flex;
+    width: 20%;
+    justify-content: space-between;
+    align-items: center;
+    margin-right: 1em;
+}
+
+.BottomPartContainer{
+    display: flex;
+    width: 90%;
+    border-top: 0.5px solid #343a403d;
+    margin-top: auto;
+}
+
+.TotalPriceSection{
+    margin: 1em 1em 1em 75%;
+    width: 25%;
+    justify-content: space-between;
+    align-self: flex-end;
+    font-size: 0.75em;
+    font-weight: bold;
+    display: flex;
+
+}
+
+.TotalAmountNumber{
+    color: rgb(0, 90, 0);
+}
+
+.BottomPart{
+    padding-top: 2em;
+    display: flex;
+    justify-content: space-around;
+    font-size: 0.75em;
+    background-color: #e1e2e4;
+    height: 20%;
+    font-weight: bold;
+    color: #626569;
+    border-radius: 0 0 1em 1em;
+}
+
+.From .To{
+    display: flex;
+    flex-direction: column;
+}
+
+
+
+.NoteContainer{
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    margin-right: 1em;
+}
+
+.Note{
+    text-transform: uppercase;
+
+}
+
+.PaymentMedium{
+    margin-bottom: 1em;
+}
+
+
+
+
+@media screen and (min-width: 0) and (max-width: 480px) and (max-aspect-ratio: 4 / 3) {
+    html body {
+        font-size: 1.5vw;
+    }
+  }
+  
+  @media screen and (max-width: 480px) and (orientation: landscape) {
+    html body {
+        font-size: 1.5vw;
+    }
+  } 
+  
+  
+  @media screen and (min-width: 481px) and (max-width: 840px) and (max-aspect-ratio: 4 / 3) {
+    html body {
+        font-size: 1vw;
+    }
+  }
+  
+  @media screen and (min-width: 841px) and (max-width: 1280px) and (orientation: landscape) {
+    html body {
+        font-size: .85vw;
+    }
+  
+  }
+

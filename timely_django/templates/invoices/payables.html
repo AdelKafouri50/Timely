@@ -50,12 +50,13 @@
         const TotalAmount = document.getElementById('TotalAmount')
         
         const cardscontainer = document.querySelector('.cardsContainer')
-        const data = await fetch('http://localhost:8000/accounts/payables-json/')
+        const data = await fetch('http://localhost:8000/rest-api/payables/')
         const jsonData = await data.json()
-        console.log(jsonData)
+        //console.table(jsonData)
         jsonData.forEach(item => {
+            console.log(item.index_id)
             cardscontainer.innerHTML +=
-            `<div id="${item.index}" class="card-container">
+            `<div id="${item.invoice_id}" class="card-container">
                 <div class="top-part">
                     <h2 class="top-part-content">${item.business_name}</h2>
                 </div>
@@ -64,7 +65,7 @@
                     <span class="bot-part-content"> ${item.total_price} </span>
                 </div>
                 <div class="bot-part-footer">
-                    <span> #${item.index}</span>
+                    <span> #${item.invoice_id}</span>
                 </div>
             </div>`
         })
@@ -73,10 +74,10 @@
         element.forEach(card =>{
             card.addEventListener('click', ()=>{
                 console.log(card.id)
-                const filtered = jsonData.find(item => item.index == card.id)
-                console.log(filtered)
+                const filtered = jsonData.find(item => item.invoice_id == card.id)
+                //console.log(filtered)
                 BusinessName.innerHTML = filtered.business_name
-                InvoiceNumber.innerHTML = filtered.index
+                InvoiceNumber.innerHTML = filtered.invoice_id
                 DateSent.innerHTML = filtered.date_sent
                 DueDate.innerHTML = filtered.date_due
                 TotalAmount.innerHTML = filtered.total_price
